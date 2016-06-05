@@ -1,0 +1,9 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/sw-timer.html",
+  "fragments": [
+    "src/sw-teams.html",
+    "src/sw-countdown.html",
+    "src/sw-control.html"
+  ]
+}

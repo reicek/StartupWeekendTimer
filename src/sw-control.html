@@ -1,0 +1,163 @@
+<!--
+    Startup Weekend Timer - Facilitates the coordination in real-time of countdown for the final pitches over a Startup Weekend event
+    Copyright (C) 2016  Cesar Anton Dorantes @reicek for Startup Weekend (C)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>
+-->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<!--  
+    ====================================
+                  Shady DOM  
+    ====================================
+-->
+<dom-module 
+  id = "sw-control">
+  <template>
+<!--
+    ------------------------------------
+                     CSS 
+    ------------------------------------
+-->
+    <style>
+      :host {
+        display           : block;
+        padding           : 10px;
+      }
+      .card {
+        box-shadow        : 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        padding           : 16px;
+        margin            : 24px;
+        border-radius     : 5px;
+        background-color  : #fff;
+        color             : #757575;
+        max-width         : 20em;
+      }
+      h1 {
+        font-size         : 22px;
+        margin            : 16px 0;
+        color             : #212121;
+      }
+      paper-input {
+        max-width         : 15em;
+      }
+      paper-fab {
+        margin-left       : auto;
+        box-shadow        : 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        --paper-fab-background: var(--paper-green-500);
+        --paper-fab-keyboard-focus-background: var(--paper-green-900)
+      }
+    </style>
+<!--  
+    ------------------------------------
+                   HTML
+    ------------------------------------
+-->
+    <div class="card">
+      <h1>Event details manager</h1>
+      <paper-input 
+        id     = "pitchesDate"
+        label  = "Date of the Pitches?" 
+        type   = "date"
+        value  = "{{ pitchesDate }}"
+        autofocus>
+      </paper-input>
+      <paper-input 
+        id     = "pitchesTime"
+        label  = "At what time do they start?" 
+        type   = "time"
+        value  = "{{ pitchesTime }}">
+      </paper-input>
+      <paper-fab 
+        icon      = "check"
+        title     = "Save changes"
+        on-tap    = "pitchesDateTime_Update">
+      </paper-fab>
+    </div>
+  </template>
+<!--
+    ------------------------------------
+                    JS
+    ------------------------------------
+-->
+  <script>
+    "use strict";
+    var self                 = this,
+        pitchesDateTime_Ref  = firebaseApp.database().ref("pitches/pitchesDateTime"),
+        pitchesDate          = '',
+        pitchesTime          = '',
+        pitchesDateTime      = 0;
+    Polymer({
+      is    : 'sw-control',
+      ready : function() {
+        var pitchesDate_obj      = this.$.pitchesDate,
+            pitchesTime_obj      = this.$.pitchesTime;
+        pitchesDateTime_Ref.on('value', function(snapshot) {
+          console.info('pitchesDateTime',snapshot.val());
+          var year   = (new Date(snapshot.val()).getFullYear()).toString(),
+              month  = (new Date(snapshot.val()).getMonth()+1).toString(),
+              day    = (new Date(snapshot.val()).getDate()).toString(),
+              hour   = (new Date(snapshot.val()).getHours()).toString(),
+              minute = (new Date(snapshot.val()).getMinutes()).toString(),
+              second = (new Date(snapshot.val()).getSeconds()).toString(),
+              zero   = '0';
+          if (day.length    < 2) day    = zero.concat(day);
+          if (month.length  < 2) month  = zero.concat(month);
+          if (hour.length   < 2) hour   = zero.concat(hour);
+          if (minute.length < 2) minute = zero.concat(minute);
+          if (second.length < 2) second = zero.concat(second);
+          pitchesDate_obj.value = year+'-'+month+'-'+day;
+          pitchesTime_obj.value = hour+':'+minute+':'+second;
+        });
+      },
+      properties  : {
+        pitchesDate : {
+          type        : 'text',
+          observer    : '_pitchesDateChanged'
+        },
+        pitchesTime : {
+          type        : 'text',
+          observer    : '_pitchesTimeChanged'
+        }
+      },
+      pitchesDateTime_Update : function(){
+        pitchesDateTime_Ref.set(pitchesDateTime);
+        console.info('pitchesDateTime_Update',pitchesDateTime);
+      },
+      _pitchesDateChanged : function(newValue, oldValue) {
+        pitchesDate = newValue;
+        if ((pitchesDate != '') && (pitchesTime != '')){
+          pitchesDateTime = Date.parse(pitchesDate+' '+pitchesTime);
+/*  Enable for debug log
+          console.info('_pitchesDateChanged',newValue, oldValue);
+          console.log(pitchesDateTime,new Date(pitchesDateTime));
+//*/
+        }; 
+      },
+      _pitchesTimeChanged : function(newValue, oldValue) {
+        pitchesTime = newValue;
+        if ((pitchesDate != '') && (pitchesTime != '')){
+          pitchesDateTime = Date.parse(pitchesDate+' '+pitchesTime);
+/*  Enable for debug log
+          console.info('_pitchesDateChanged',newValue, oldValue);
+          console.log(pitchesDateTime,new Date(pitchesDateTime));
+//*/
+        };
+      }
+    });
+  </script>
+    
+</dom-module>

@@ -1,0 +1,219 @@
+<!--
+    Startup Weekend Timer - Facilitates the coordination in real-time of countdown for the final pitches over a Startup Weekend event
+    Copyright (C) 2016  Cesar Anton Dorantes @reicek for Startup Weekend (C)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>
+-->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/animated-countdown/animated-countdown.html">
+<!--  
+    ====================================
+                  Shady DOM  
+    ====================================
+-->
+<dom-module 
+  id = "sw-countdown">
+  <template>
+<!--
+    ------------------------------------
+                     CSS 
+    ------------------------------------
+-->
+    <style>
+      :host {
+        display           : block;
+        padding           : 10px;
+      }
+      h1 {
+        padding-bottom    : 1em;
+      }
+      .card {
+        box-shadow        : 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        padding           : 2em;
+        margin            : 2em;
+        border-radius     : 5px;
+        background-color  : #fff;
+        color             : #414141;
+      }
+      #countdown {
+        display           : flex;
+        flex-direction    : row;
+        justify-content   : center;
+        align-items       : center;
+      }
+      #time {
+        display           : flex;
+        flex-direction    : row;
+        justify-content   : center;
+        align-items       : center;
+        font-size         : 3em;
+        position          : relative;
+        top               : -230px;
+      }
+      @media all and (max-width: 480px) {
+        #time {
+          font-size         : 2em;
+          top               : -222px;
+        }
+      }
+      @media all and (max-width: 380px) {
+        .card {
+          margin            : 0;
+          padding           : 1em;
+        }
+        #time {
+          font-size         : 1.4em;
+          top               : -215px;
+        }
+      }
+    </style>
+<!--  
+    ------------------------------------
+                   HTML
+    ------------------------------------
+-->
+    <div class="card">
+      <h1
+        id = "title">
+        {{ title }}
+      </h1>
+      <div
+        id = "countdown">
+      </div>
+      <div
+        id = "time">
+        {{ countdown }}
+      </div>
+    </div>
+  </template>
+<!--
+    ------------------------------------
+                    JS
+    ------------------------------------
+-->
+  <script>
+    "use strict";
+    var pitchesDateTime_Ref  = firebaseApp.database().ref("pitches/pitchesDateTime");
+    function pieChart(percentage, size, color) {
+      var self  = this,
+          svgns = "http://www.w3.org/2000/svg",
+          chart = document.createElementNS(svgns, "svg:svg"),
+          color = "#F5F5F5",
+          back  = document.createElementNS(svgns, "circle"),
+          path  = document.createElementNS(svgns, "path"),
+          unit  = (Math.PI *2) / 100,
+          startangle = 0,
+          endangle = percentage * unit - 0.001,
+          x1    = (size / 2) + (size / 2) * Math.sin(startangle),
+          y1    = (size / 2) - (size / 2) * Math.cos(startangle),
+          x2    = (size / 2) + (size / 2) * Math.sin(endangle),
+          y2    = (size / 2) - (size / 2) * Math.cos(endangle),
+          big   = 0;
+      chart.setAttribute("width", size);
+      chart.setAttribute("height", size);
+      chart.setAttribute("viewBox", "0 0 " + size + " " + size);
+      // Background circle
+      back.setAttributeNS(null, "cx", size / 2);
+      back.setAttributeNS(null, "cy", size / 2);
+      back.setAttributeNS(null, "r",  size / 2);
+      back.setAttributeNS(null, "fill", color);
+      chart.appendChild(back);
+      // Primary wedge
+      if (endangle - startangle > Math.PI) {
+        big = 1;
+      }
+      var d    = 
+         "M " + (size / 2) + "," + (size / 2) +               // Start at circle center
+        " L " + x1 + "," + y1 +                               // Draw line to (x1,y1)
+        " A " + (size / 2) + "," + (size / 2) +               // Draw an arc of radius r
+        " 0 " + big + " 1 " +                                 // Arc details...
+        x2 + "," + y2 +                                       // Arc goes to to (x2,y2)
+        " Z";                                                 // Close path back to (cx,cy)
+      path.setAttribute("d", d);                              // Set this path 
+      switch (true){                                          // Set chart color according to %
+        case ((percentage < 50) && (percentage >= 30)):
+          path.setAttribute("fill", '#00BCD4');
+          break;
+        case ((percentage < 30) && (percentage >= 10)):
+          path.setAttribute("fill", '#FFEB3B');
+          break;
+        case (percentage < 10):
+          path.setAttribute("fill", '#F44336');
+          break;
+        default :
+          path.setAttribute("fill", '#3CCF80');
+          break;
+      }
+      chart.appendChild(path);                                // Add wedge to chart
+      // Foreground circle
+      var front = document.createElementNS(svgns, "circle");    
+      front.setAttributeNS(null, "cx", (size / 2));
+      front.setAttributeNS(null, "cy", (size / 2));
+      front.setAttributeNS(null, "r",  (size * 0.4));
+      front.setAttributeNS(null, "fill", "#fff");
+      chart.appendChild(front);
+      return chart;
+    }
+    Polymer({
+      is    : 'sw-countdown',
+      ready : function() {
+        var self      = this,
+            tt        = 300000,                               // Total time (ms)
+            st        = Date.now(),                           // Starting time (UTC ms)
+            et        = st + tt,                              // Ending time (UTC ms)
+            percent   = 100,                                  // Current percent holder
+            countdown = self.$.countdown;
+        pitchesDateTime_Ref.on('value', function(snapshot) {
+          console.info('pitchesDateTime',snapshot.val());
+          st = snapshot.val();
+          et = st + tt,                                       // Ending time (UTC ms)
+          window.requestAnimationFrame(updateCounter);        // Draw on next frame
+        });
+        function updateCounter(){
+          if (Date.now() >= st) {                             // Update percent
+            var team  = '',
+                title = 'Now pitching "'+team+'"';
+            self.$.title.innerHTML = title;
+            percent = ((et - Date.now()) / tt) * 100;
+            if (percent >= 0){
+/*  Enable for debug log
+              console.info('inits',st,tt,et,percent)
+//*/
+              countdown.innerHTML = '';                       // Erase chart
+              countdown.appendChild(pieChart(percent , 400)); // Redraw updated chart
+            }
+          } else {
+            var title = '';
+            switch (true){
+              case (Math.floor((st - Date.now())/60000) > 1):
+                title = 'Pitches will start in '+Math.floor((st - Date.now())/60000)+' minutes...';
+                break;
+              case (Math.floor((st - Date.now())/60000) == 1):
+                title = 'Pitches will start in '+Math.floor((st - Date.now())/60000)+' minute...'; 
+                break;
+              case (Math.floor((st - Date.now())/60000) === 0):
+                title = 'Pitches will start in '+Math.floor((st - Date.now())/1000)+' seconds...';
+                break;
+            }
+            self.$.title.innerHTML = title;
+            countdown.innerHTML    = '';
+          }
+//*  Disable to draw only the first frame
+          window.requestAnimationFrame(updateCounter);        // Redraw on next frame
+//*/
+        };
+      }
+    });
+  </script>
+</dom-module>

@@ -1,0 +1,86 @@
+<!--
+    Startup Weekend Timer - Facilitates the coordination in real-time of countdown for the final pitches over a Startup Weekend event
+    Copyright (C) 2016  Cesar Anton Dorantes @reicek for Startup Weekend (C)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>
+-->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<!--  
+    ====================================
+                  Shady DOM  
+    ====================================
+-->
+<dom-module id="sw-teams">
+  <template>
+<!--
+    ------------------------------------
+                     CSS 
+    ------------------------------------
+-->
+    <style>
+      :host {
+        display: block;
+        padding: 10px;
+      }
+      .card {
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        padding: 16px;
+        margin: 24px;
+        border-radius: 5px;
+        background-color: #fff;
+        color: #757575;
+      }
+      .circle {
+        display: inline-block;
+        height: 64px;
+        width: 64px;
+        border-radius: 50%;
+        background: #ddd;
+        line-height: 64px;
+        font-size: 30px;
+        color: #555;
+        text-align: center;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 16px 0;
+        color: #212121;
+      }
+    </style>
+<!--  
+    ------------------------------------
+                   HTML
+    ------------------------------------
+-->
+    <div class="card">
+      <div class="circle">2</div>
+      <h1>View Two</h1>
+      <p>Ea duis bonorum nec, falli paulo aliquid ei eum.</p>
+      <p>Id nam odio natum malorum, tibique copiosae expetenda mel ea.Detracto suavitate repudiandae no eum. Id adhuc minim soluta nam.Id nam odio natum malorum, tibique copiosae expetenda mel ea.</p>
+    </div>
+  </template>
+<!--
+    ------------------------------------
+                    JS
+    ------------------------------------
+-->
+  <script>
+    "use strict";
+    Polymer({
+      is    : 'sw-teams',
+      ready : function() {
+      }
+    });
+  </script>
+</dom-module>
