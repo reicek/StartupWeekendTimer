@@ -44,7 +44,7 @@
         margin            : 2em;
         border-radius     : 5px;
         background-color  : #fff;
-        color             : #414141;
+        color             : var(--app-secondary-color);
       }
       #countdown {
         display           : flex;
@@ -86,14 +86,12 @@
     <div class="card">
       <h1
         id = "title">
-        {{ title }}
       </h1>
       <div
         id = "countdown">
       </div>
       <div
         id = "time">
-        {{ countdown }}
       </div>
     </div>
   </template>
@@ -104,7 +102,12 @@
 -->
   <script>
     "use strict";
-    var pitchesDateTime_Ref  = firebaseApp.database().ref("pitches/pitchesDateTime");
+    var pitchesDateTime_Ref  = firebaseApp.database().ref("pitchesDateTime"),
+        teams_Ref            = firebaseApp.database().ref("teams"),
+        teams                = [''],
+        readyTime            = 45000,
+        pitchTime            = 300000,
+        qaTime               = 180000;
     function pieChart(percentage, size, color) {
       var self  = this,
           svgns = "http://www.w3.org/2000/svg",
@@ -134,14 +137,14 @@
         big = 1;
       }
       var d    = 
-         "M " + (size / 2) + "," + (size / 2) +               // Start at circle center
-        " L " + x1 + "," + y1 +                               // Draw line to (x1,y1)
-        " A " + (size / 2) + "," + (size / 2) +               // Draw an arc of radius r
-        " 0 " + big + " 1 " +                                 // Arc details...
-        x2 + "," + y2 +                                       // Arc goes to to (x2,y2)
-        " Z";                                                 // Close path back to (cx,cy)
-      path.setAttribute("d", d);                              // Set this path 
-      switch (true){                                          // Set chart color according to %
+         "M " + (size / 2) + "," + (size / 2) +                 // Start at circle center
+        " L " + x1 + "," + y1 +                                 // Draw line to (x1,y1)
+        " A " + (size / 2) + "," + (size / 2) +                 // Draw an arc of radius r
+        " 0 " + big + " 1 " +                                   // Arc details...
+        x2 + "," + y2 +                                         // Arc goes to to (x2,y2)
+        " Z";                                                   // Close path back to (cx,cy)
+      path.setAttribute("d", d);                                // Set this path 
+      switch (true){                                            // Set chart color according to %
         case ((percentage < 50) && (percentage >= 30)):
           path.setAttribute("fill", '#00BCD4');
           break;
@@ -151,13 +154,16 @@
         case (percentage < 10):
           path.setAttribute("fill", '#F44336');
           break;
+        case (percentage <= 0):
+          path.setAttribute("fill", '#F5F5F5');
+          break;
         default :
           path.setAttribute("fill", '#3CCF80');
           break;
       }
-      chart.appendChild(path);                                // Add wedge to chart
+      chart.appendChild(path);                                  // Add wedge to chart
       // Foreground circle
-      var front = document.createElementNS(svgns, "circle");    
+      var front = document.createElementNS(svgns, "circle");
       front.setAttributeNS(null, "cx", (size / 2));
       front.setAttributeNS(null, "cy", (size / 2));
       front.setAttributeNS(null, "r",  (size * 0.4));
@@ -168,50 +174,105 @@
     Polymer({
       is    : 'sw-countdown',
       ready : function() {
-        var self      = this,
-            tt        = 300000,                               // Total time (ms)
-            st        = Date.now(),                           // Starting time (UTC ms)
-            et        = st + tt,                              // Ending time (UTC ms)
-            percent   = 100,                                  // Current percent holder
-            countdown = self.$.countdown;
+        var self       = this,
+            tt         = 45000,                                  // Total time (ms)
+            st         = Date.now(),                             // Starting time (UTC ms)
+            et         = st + tt,                                // Ending time (UTC ms)
+            percent    = 100,                                    // Current percent holder
+            countdown  = self.$.countdown,
+            time       = self.$.time,
+            timeString = '',
+            mins       = 0,
+            secs       = 0,
+            starters   = [];
         pitchesDateTime_Ref.on('value', function(snapshot) {
           console.info('pitchesDateTime',snapshot.val());
           st = snapshot.val();
-          et = st + tt,                                       // Ending time (UTC ms)
-          window.requestAnimationFrame(updateCounter);        // Draw on next frame
+        });
+        teams_Ref.on('value', function(snapshot) {
+          teams = snapshot.val();
+          console.info('Teams: ' + teams.length ,snapshot.val());
+          for (var i=0,total=teams.length; i<total; i++){
+            var team   = {},
+            roundTime  = readyTime + pitchTime + qaTime;
+            team.name  = teams[i];
+            team.ready = (i * roundTime) + st;
+            team.pitch = (i * roundTime) + st + readyTime;
+            team.qa    = (i * roundTime) + st + readyTime + pitchTime;
+            starters.push(team);
+          }
+          var lastTeamIndex = teams.length - 1;
+          et = st + teams[lastTeamIndex];                       // Ending time (UTC ms)
+          console.info(starters);
+          window.requestAnimationFrame(updateCounter);          // Draw on next frame
         });
         function updateCounter(){
-          if (Date.now() >= st) {                             // Update percent
-            var team  = '',
-                title = 'Now pitching "'+team+'"';
-            self.$.title.innerHTML = title;
-            percent = ((et - Date.now()) / tt) * 100;
-            if (percent >= 0){
-/*  Enable for debug log
-              console.info('inits',st,tt,et,percent)
-//*/
-              countdown.innerHTML = '';                       // Erase chart
-              countdown.appendChild(pieChart(percent , 400)); // Redraw updated chart
-            }
-          } else {
-            var title = '';
-            switch (true){
-              case (Math.floor((st - Date.now())/60000) > 1):
-                title = 'Pitches will start in '+Math.floor((st - Date.now())/60000)+' minutes...';
-                break;
-              case (Math.floor((st - Date.now())/60000) == 1):
-                title = 'Pitches will start in '+Math.floor((st - Date.now())/60000)+' minute...'; 
-                break;
-              case (Math.floor((st - Date.now())/60000) === 0):
-                title = 'Pitches will start in '+Math.floor((st - Date.now())/1000)+' seconds...';
-                break;
-            }
-            self.$.title.innerHTML = title;
-            countdown.innerHTML    = '';
+          var moment = Date.now(),
+              endsAt = 0;
+          switch (true){
+            case (moment >= et):
+              countdown.innerHTML    = '';                      // Erase chart
+              self.$.title.innerHTML = 'Pitches are over.';
+              break;
+            case (moment >= st):                                // Update percent
+              var team   = '',
+                  title  = '';
+              for (var i=0, total=starters.length; i<total; i++){
+                team     = starters[i].name;
+                switch (true){
+                  case ((starters[i].ready <= moment) && (starters[i].pitch > moment)) :
+                    endsAt   = starters[i].pitch;
+                    title    = '"'+team+'" get ready...';
+                    percent  = ((endsAt - moment) / readyTime) * 100;
+                    mins     = Math.floor((endsAt - moment)/60000);
+                    secs     = Math.floor((endsAt - moment)/1000) - (mins*60);
+                    break;
+                  case ((starters[i].pitch <= moment) && (starters[i].qa > moment)) :
+                    endsAt   = starters[i].qa;
+                    title    = 'Now pitching: "'+team+'"';
+                    percent  = ((endsAt - moment) / pitchTime) * 100;
+                    mins     = Math.floor((endsAt - moment)/60000);
+                    secs     = Math.floor((endsAt - moment)/1000) - (mins*60);
+                    break;
+                  case ((starters[i].qa    <= moment) && (starters[i].qa+qaTime > moment)) :
+                    endsAt   = starters[i].qa+qaTime;
+                    title    = 'Q&A for: "'+team+'"';
+                    percent  = ((endsAt - moment) / qaTime) * 100;
+                    mins     = Math.floor((endsAt - moment)/60000);
+                    secs     = Math.floor((endsAt - moment)/1000) - (mins*60);
+                    break;
+                }
+              }
+              self.$.title.innerHTML = title;
+//              console.warn(percent);
+              if (percent >= 0){
+                countdown.innerHTML = '';
+                timeString          = mins +':' +secs;
+                time.innerHTML      = timeString;
+                countdown.appendChild(pieChart(percent , 400)); // Redraw updated chart
+              } else {
+                countdown.innerHTML  = '';
+                time.innerHTML       = '';
+              }
+              break;
+            default:
+              var title = '';
+              switch (true){
+                case (Math.floor((st - moment)/60000) > 1):
+                  title = 'Pitches will start in '+Math.floor((st - moment)/60000)+' minutes...';
+                  break;
+                case (Math.floor((st - moment)/60000) == 1):
+                  title = 'Pitches will start in '+Math.floor((st - moment)/60000)+' minute...'; 
+                  break;
+                case (Math.floor((st - moment)/60000) === 0):
+                  title = 'Pitches will start in '+Math.floor((st - moment)/1000)+' seconds...';
+                  break;
+              }
+              self.$.title.innerHTML = title;
+              countdown.innerHTML    = '';
+              break;
           }
-//*  Disable to draw only the first frame
-          window.requestAnimationFrame(updateCounter);        // Redraw on next frame
-//*/
+          window.requestAnimationFrame(updateCounter);          // Redraw on next frame
         };
       }
     });

@@ -27,7 +27,7 @@
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
-<link rel="import" href="sw-icons.html">
+<link rel="import" href="/src/sw-icons.html">
 <script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>
 <!--  
     ====================================
@@ -55,6 +55,12 @@
       app-header paper-icon-button {
         --paper-icon-button-ink-color : white;
       }
+      app-drawer {
+          --app-drawer-content-container : {
+          box-shadow                     : 1px 0 2px 1px rgba(0,0,0,0.18);
+        }
+        --app-drawer-scrim-background : rgba(179, 157, 219, 0.5);
+      }
       .drawer-list {
         margin                        : 0 20px;
       }
@@ -66,13 +72,15 @@
         color                         : var(--app-secondary-color);
       }
       .drawer-list a.iron-selected {
-        color                         : black;
+        color                         : var(--app-secondary-color);
         font-weight                   : bold;
       }
       .drawer-list a.subroute {
         padding-left                  : 32px;
       }
       .logo {
+        display                       : flex;
+        justify-content               : center;
         margin-left                   : auto;
       }
       
@@ -89,12 +97,14 @@
       route ="{{route}}">
     </app-location>
     <app-route
-      route   ="{{route}}"
+      route   = "{{route}}"
       pattern = "/:page"
-      data    ="{{routeData}}"
-      tail    ="{{subroute}}">
+      data    = "{{routeData}}"
+      tail    = "{{subroute}}">
     </app-route>
-    <app-drawer-layout fullbleed>
+    <app-drawer-layout
+      id = "drawer"
+      fullbleed>
       <!-- Drawer content -->
       <app-drawer>
         <app-toolbar>
@@ -130,7 +140,8 @@
           condenses 
           reveals>
           <app-toolbar>
-            <paper-icon-button 
+            <paper-icon-button
+              id   = "menu"
               icon = "menu" 
               drawer-toggle>
             </paper-icon-button>
@@ -191,6 +202,9 @@
         // load page import on demand.
         this.importHref(
           this.resolveUrl('sw-' + page + '.html'), null, null, true);
+      },
+      ready : function() {
+        this.$.drawer.forceNarrow = true;
       }
     });
   </script>

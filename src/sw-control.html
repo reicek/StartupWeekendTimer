@@ -16,9 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>
 -->
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <!--  
     ====================================
                   Shady DOM  
@@ -37,28 +39,69 @@
         display           : block;
         padding           : 10px;
       }
+      .cards  {
+        display           : flex;
+        flex-wrap         : wrap;
+      }
       .card {
-        box-shadow        : 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
-        padding           : 16px;
-        margin            : 24px;
-        border-radius     : 5px;
+        min-width         : 15em;
+        padding           : 1em;
+        margin            : 2em;
+        border-radius     : 0.5em;
         background-color  : #fff;
-        color             : #757575;
-        max-width         : 20em;
+        color             : var(--app-secondary-color);
+        box-shadow        : 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
       }
       h1 {
         font-size         : 22px;
         margin            : 16px 0;
-        color             : #212121;
+        color             : var(--app-secondary-color);
       }
       paper-input {
         max-width         : 15em;
       }
-      paper-fab {
-        margin-left       : auto;
+      paper-toast {
+        left              : auto !important;
+      }
+      #saveChanges {
+        position          : fixed;
+        bottom            : 2em;
+        right             : 2em;
         box-shadow        : 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
         --paper-fab-background: var(--paper-green-500);
-        --paper-fab-keyboard-focus-background: var(--paper-green-900)
+        --paper-fab-keyboard-focus-background: var(--paper-green-900);
+      }
+      #saveChanges ,
+      .card {
+        transition        : box-shadow 0.3s cubic-bezier(.25,.8,.25,1);
+      }
+      #saveChanges:hover ,
+      .card:hover {
+        box-shadow        : 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+      }
+      #addTeam {
+        float             : right;
+        color             : var(--paper-green-500);
+        --paper-fab-background: none;
+        --paper-fab-keyboard-focus-background: none;
+      }
+      .removeTeam {
+        float             : left;
+        margin-top        : 0.8em;
+        color             : var(--paper-orange-500);
+        --paper-fab-background: none;
+        --paper-fab-keyboard-focus-background: none;
+      }
+      @media all and (max-width: 480px) {
+        #saveChanges {
+          bottom            : 0.5em;
+        }
+        .card {
+          margin            : 0.5em;
+        }
+        .card:nth-last-child(1) {
+          margin-bottom     : 3em;
+        }
       }
     </style>
 <!--  
@@ -66,27 +109,68 @@
                    HTML
     ------------------------------------
 -->
-    <div class="card">
-      <h1>Event details manager</h1>
-      <paper-input 
-        id     = "pitchesDate"
-        label  = "Date of the Pitches?" 
-        type   = "date"
-        value  = "{{ pitchesDate }}"
-        autofocus>
-      </paper-input>
-      <paper-input 
-        id     = "pitchesTime"
-        label  = "At what time do they start?" 
-        type   = "time"
-        value  = "{{ pitchesTime }}">
-      </paper-input>
-      <paper-fab 
-        icon      = "check"
-        title     = "Save changes"
-        on-tap    = "pitchesDateTime_Update">
-      </paper-fab>
+    <div 
+      class = "cards">
+      <div
+        class = "card"
+        id    = "pitches">
+        <h1>Pitches start at...</h1>
+        <paper-input 
+          id     = "pitchesDate"
+          min    = "2016-06-00"
+          label  = "Date of the Pitches?" 
+          type   = "date"
+          value  = "{{ pitchesDate }}"
+          autofocus>
+        </paper-input>
+        <paper-input 
+          id     = "pitchesTime"
+          label  = "At what time do they start?" 
+          type   = "time"
+          value  = "{{ pitchesTime }}">
+        </paper-input>
+      </div>
+      <div
+        class = "card"
+        id    = "teams">
+        <h1>Teams</h1>
+        <template 
+          is    = "dom-repeat"
+          items ="{{teams}}"
+          as    = "team">
+          <paper-fab 
+            mini
+            index     = "{{ index }}"
+            class     = "removeTeam"
+            icon      = "remove-circle"
+            title     = "Remove team"
+            on-tap    = removeTeam>
+          </paper-fab>
+          <paper-input 
+            label       = "Team {{ indexNumber(index) }}"
+            value       = "{{ team }}">
+          </paper-input>
+        </template>
+        <paper-fab 
+          id        = "addTeam"
+          icon      = "add-circle"
+          title     = "Add new team"
+          on-tap    = "addTeam">
+        </paper-fab>
+      </div>
     </div>
+    <paper-fab 
+      id        = "saveChanges"
+      icon      = "check"
+      title     = "Save changes"
+      on-tap    = "saveChanges">
+    </paper-fab>
+    <paper-toast 
+      id              = "toast"
+      text            = "Changes saved"
+      horizontalAlign = "right"
+      alwaysOnTop>
+    </paper-toast>
   </template>
 <!--
     ------------------------------------
@@ -95,34 +179,13 @@
 -->
   <script>
     "use strict";
-    var self                 = this,
-        pitchesDateTime_Ref  = firebaseApp.database().ref("pitches/pitchesDateTime"),
+    var pitchesDateTime_Ref  = firebaseApp.database().ref("pitchesDateTime"),
+        teams_Ref            = firebaseApp.database().ref("teams"),
         pitchesDate          = '',
         pitchesTime          = '',
         pitchesDateTime      = 0;
     Polymer({
       is    : 'sw-control',
-      ready : function() {
-        var pitchesDate_obj      = this.$.pitchesDate,
-            pitchesTime_obj      = this.$.pitchesTime;
-        pitchesDateTime_Ref.on('value', function(snapshot) {
-          console.info('pitchesDateTime',snapshot.val());
-          var year   = (new Date(snapshot.val()).getFullYear()).toString(),
-              month  = (new Date(snapshot.val()).getMonth()+1).toString(),
-              day    = (new Date(snapshot.val()).getDate()).toString(),
-              hour   = (new Date(snapshot.val()).getHours()).toString(),
-              minute = (new Date(snapshot.val()).getMinutes()).toString(),
-              second = (new Date(snapshot.val()).getSeconds()).toString(),
-              zero   = '0';
-          if (day.length    < 2) day    = zero.concat(day);
-          if (month.length  < 2) month  = zero.concat(month);
-          if (hour.length   < 2) hour   = zero.concat(hour);
-          if (minute.length < 2) minute = zero.concat(minute);
-          if (second.length < 2) second = zero.concat(second);
-          pitchesDate_obj.value = year+'-'+month+'-'+day;
-          pitchesTime_obj.value = hour+':'+minute+':'+second;
-        });
-      },
       properties  : {
         pitchesDate : {
           type        : 'text',
@@ -130,12 +193,35 @@
         },
         pitchesTime : {
           type        : 'text',
-          observer    : '_pitchesTimeChanged'
+          observer    : '_pitchesTimeChanged',
+          value       : '20:00:00'
+        },
+        teams        : {
+          type        : 'Object',
+          notify      : true,
+          observer    : '_teamsChanged',
+          value       : function() {
+            return [''];
+          }
         }
       },
-      pitchesDateTime_Update : function(){
+      indexNumber         : function(index){
+        return index + 1;
+      },
+      saveChanges         : function(){
+        var self = this;
         pitchesDateTime_Ref.set(pitchesDateTime);
-        console.info('pitchesDateTime_Update',pitchesDateTime);
+        teams_Ref.set(self.teams, function(){
+          console.info('save',pitchesDateTime);
+          self.$.toast.open();
+        });
+      },
+      addTeam             : function(){
+        this.push('teams',' ');
+      },
+      removeTeam          : function(e){
+        console.log()
+        this.splice('teams',e.target.index,1);
       },
       _pitchesDateChanged : function(newValue, oldValue) {
         pitchesDate = newValue;
@@ -156,6 +242,38 @@
           console.log(pitchesDateTime,new Date(pitchesDateTime));
 //*/
         };
+      },
+      _teamsChanged       : function(newValue, oldValue) {
+        this.teams  = newValue;
+//*  Enable for debug log
+        console.info('_teamsChanged',newValue, oldValue);
+//*/
+      },
+      ready : function() {
+        var self = this,
+            pitchesDate_obj      = self.$.pitchesDate,
+            pitchesTime_obj      = self.$.pitchesTime;
+        teams_Ref.on('value', function(snapshot) {
+          self.set('teams',snapshot.val());
+          console.info('teams_Ref',snapshot.val());
+        });
+        pitchesDateTime_Ref.on('value', function(snapshot) {
+          console.info('pitchesDateTime',snapshot.val());
+          var year   = (new Date(snapshot.val()).getFullYear()).toString(),
+              month  = (new Date(snapshot.val()).getMonth()+1).toString(),
+              day    = (new Date(snapshot.val()).getDate()).toString(),
+              hour   = (new Date(snapshot.val()).getHours()).toString(),
+              minute = (new Date(snapshot.val()).getMinutes()).toString(),
+              second = (new Date(snapshot.val()).getSeconds()).toString(),
+              zero   = '0';
+          if (day.length    < 2) day    = zero.concat(day);
+          if (month.length  < 2) month  = zero.concat(month);
+          if (hour.length   < 2) hour   = zero.concat(hour);
+          if (minute.length < 2) minute = zero.concat(minute);
+          if (second.length < 2) second = zero.concat(second);
+          pitchesDate_obj.value = year+'-'+month+'-'+day;
+          pitchesTime_obj.value = hour+':'+minute+':'+second;
+        });
       }
     });
   </script>

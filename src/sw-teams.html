@@ -21,7 +21,8 @@
                   Shady DOM  
     ====================================
 -->
-<dom-module id="sw-teams">
+<dom-module
+  id = "sw-teams">
   <template>
 <!--
     ------------------------------------
@@ -30,32 +31,30 @@
 -->
     <style>
       :host {
-        display: block;
-        padding: 10px;
+        display           : block;
+        padding           : 10px;
+      }
+      .cards  {
+        display           : flex;
+        flex-wrap         : wrap;
       }
       .card {
-        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
-        padding: 16px;
-        margin: 24px;
-        border-radius: 5px;
-        background-color: #fff;
-        color: #757575;
+        min-width         : 10em;
+        padding           : 1em;
+        margin            : 1em;
+        border-radius     : 0.5em;
+        background-color  : #fff;
+        color             : var(--app-secondary-color);
+        transition        : box-shadow 0.3s cubic-bezier(.25,.8,.25,1);
+        box-shadow        : 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
       }
-      .circle {
-        display: inline-block;
-        height: 64px;
-        width: 64px;
-        border-radius: 50%;
-        background: #ddd;
-        line-height: 64px;
-        font-size: 30px;
-        color: #555;
-        text-align: center;
+      .card:hover {
+        box-shadow        : 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
       }
       h1 {
-        font-size: 22px;
-        margin: 16px 0;
-        color: #212121;
+        font-size         : 22px;
+        margin            : 16px 0;
+        color             : #212121;
       }
     </style>
 <!--  
@@ -63,11 +62,18 @@
                    HTML
     ------------------------------------
 -->
-    <div class="card">
-      <div class="circle">2</div>
-      <h1>View Two</h1>
-      <p>Ea duis bonorum nec, falli paulo aliquid ei eum.</p>
-      <p>Id nam odio natum malorum, tibique copiosae expetenda mel ea.Detracto suavitate repudiandae no eum. Id adhuc minim soluta nam.Id nam odio natum malorum, tibique copiosae expetenda mel ea.</p>
+    <h1>Teams</h1>
+    <div 
+      class = "cards">
+      <template 
+        is    = "dom-repeat"
+        items ="{{teams}}"
+        as    = "team">
+        <div 
+          class = "card">
+            <p>{{ indexNumber(index) }}.- <strong>{{ team }}</strong><p>
+        </div>
+      </template>
     </div>
   </template>
 <!--
@@ -77,9 +83,28 @@
 -->
   <script>
     "use strict";
+    var teams_Ref = firebaseApp.database().ref("teams");
     Polymer({
       is    : 'sw-teams',
+      properties  : {
+        teams        : {
+          type        : 'Object',
+          notify      : true,
+          observer    : '_teamsChanged',
+          value       : function() {
+            return [''];
+          }
+        }
+      },
+      indexNumber         : function(index){
+        return index + 1;
+      },
       ready : function() {
+        var self = this;
+        teams_Ref.on('value', function(snapshot) {
+          self.set('teams',snapshot.val());
+          console.info('teams_Ref',snapshot.val());
+        });
       }
     });
   </script>
