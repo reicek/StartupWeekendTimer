@@ -9,7 +9,6 @@ This is a progressive real time web app built using Polymer and Firebase meant t
 ##### Prerequisites
 
     npm install -g polymer-cli
-    npm install
     bower install
 
 ### Start the development server

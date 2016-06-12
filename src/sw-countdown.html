@@ -202,7 +202,7 @@
             starters.push(team);
           }
           var lastTeamIndex = teams.length - 1;
-          et = st + teams[lastTeamIndex];                       // Ending time (UTC ms)
+          et = starters[lastTeamIndex].ready + roundTime;          // Ending time (UTC ms)
           console.info(starters);
           window.requestAnimationFrame(updateCounter);          // Draw on next frame
         });
@@ -250,26 +250,74 @@
                 timeString          = mins +':' +secs;
                 time.innerHTML      = timeString;
                 countdown.appendChild(pieChart(percent , 400)); // Redraw updated chart
-              } else {
-                countdown.innerHTML  = '';
-                time.innerHTML       = '';
               }
               break;
             default:
-              var title = '';
+              var title     = '',
+                  message   = '',
+                  totalMs = function(){
+                    return (st - moment);
+                  },
+                  totalMins = function(){
+                    return Math.floor(totalMs()/60000);
+                  },
+                  days      = function(){
+                    return Math.floor(totalMs()/86400000);
+                  },
+                  hours     = function(){
+                    return Math.floor( (totalMs()-(days()*86400000)) / 3600000 );
+                  },
+                  mins      = function(){
+                    return Math.floor( (totalMs() - ( (days()*86400000) + (hours()*3600000) )) / 60000);
+                  };
               switch (true){
-                case (Math.floor((st - moment)/60000) > 1):
+                case (totalMins() > 1440):
+                  switch (true){
+                    case ((days()  > 1) && (hours()  > 1) ):
+                      message = days()+' days, '+hours()+' hours...';
+                      break;
+                    case ((days()  > 1) && (hours() == 1) ):
+                      message = days()+' days, '+hours()+' hour...';
+                      break;
+                    case ((days() == 1) && (hours()  > 1)):
+                      message = days()+' day, '+hours()+' hours...';
+                      break;
+                    case ((days() == 1) && (hours() == 1)):
+                      message = days()+' day, '+hours()+' hour...';
+                      break;
+                  }
+                  title = 'Pitches will start in '+message;
+                  break;
+                case ( (totalMins() > 60) && (totalMins() < 1440) ):
+                  switch (true){
+                    case ((hours()  > 1) && (mins()  > 1) ):
+                      message = hours()+' hours, '+mins()+' minutes...';
+                      break;
+                    case ((hours()  > 1) && (mins() == 1) ):
+                      message = hours()+' hours, '+mins()+' minute...';
+                      break;
+                    case ((hours() == 1) && (mins()  > 1)):
+                      message = hours()+' hour, '+mins()+' minutes...';
+                      break;
+                    case ((hours() == 1) && (mins() == 1)):
+                      message = hours()+' hour, '+mins()+' minute...';
+                      break;
+                  }
+                  title = 'Pitches will start in '+message;
+                  break;
+                case ( (totalMins() > 1) && (totalMins() < 60 ) ):
                   title = 'Pitches will start in '+Math.floor((st - moment)/60000)+' minutes...';
                   break;
-                case (Math.floor((st - moment)/60000) == 1):
+                case (totalMins() == 1):
                   title = 'Pitches will start in '+Math.floor((st - moment)/60000)+' minute...'; 
                   break;
-                case (Math.floor((st - moment)/60000) === 0):
+                case (totalMins === 0):
                   title = 'Pitches will start in '+Math.floor((st - moment)/1000)+' seconds...';
                   break;
               }
               self.$.title.innerHTML = title;
               countdown.innerHTML    = '';
+              time.innerHTML    = '';
               break;
           }
           window.requestAnimationFrame(updateCounter);          // Redraw on next frame
