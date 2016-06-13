@@ -4,6 +4,10 @@ StartupWeekend Timer
 
 This is a progressive real time web app built using Polymer and Firebase meant to aid Startup Weekend event's facilitators in the final pitchs timings.
 
+### Demo
+
+https://startupweekend-timer.firebaseapp.com
+
 ### Setup
 
 ##### Prerequisites
@@ -18,14 +22,24 @@ routing for the app:
 
     polymer serve
 
-### Build
+### Build for production
 
 This command performs HTML, CSS, and JS minification on the application
 dependencies, and generates a service-worker.js file with code to pre-cache the
 dependencies based on the entrypoint and fragments specified in `polymer.json`.
 
     polymer build
-    
+
+### Deploy to production
+
+Once rebuilt, the app can be deployed using Firebase hosting; to do so first install the Firebase client.
+
+    npm install -g firebase-tools
+
+Firebase hosting allows to convientently deploy from the console.
+
+    firebase deploy
+
 ### Extend
 
 You can extend the app by adding more elements that will be demand-loaded
@@ -34,5 +48,3 @@ of the application.  Each new demand-loaded fragment should be added to the
 list of `fragments` in the included `polymer.json` file.  This will ensure
 those components and their dependencies are added to the list of pre-cached
 components (and will have bundles created in the fallback `bundled` build).
-
-

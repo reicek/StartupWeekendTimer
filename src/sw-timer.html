@@ -38,9 +38,9 @@
   id = "sw-timer">
   <template>
 <!--
-    ------------------------------------
+    ====================================
                      CSS 
-    ------------------------------------
+    ====================================
 -->
     <style>
       :host {
@@ -52,7 +52,17 @@
         background-color              : var(--app-primary-color);
         color                         : #fff;
       }
-      app-header paper-icon-button {
+      app-toolbar {
+        background-color              : var(--app-primary-color);
+        color                         : #fff;
+        font-size                     : 18px;
+      }
+      app-toolbar  iron-icon {
+        position                      : absolute;
+        top                           : 1em;
+        right                         : 1em;
+      }
+      app-header  paper-icon-button {
         --paper-icon-button-ink-color : white;
       }
       app-drawer {
@@ -60,6 +70,10 @@
           box-shadow                     : 1px 0 2px 1px rgba(0,0,0,0.18);
         }
         --app-drawer-scrim-background : rgba(179, 157, 219, 0.5);
+      }
+      app-drawer  iron-selector  iron-icon {
+        float                         : right;
+        margin-top                    : 0.5em;
       }
       .drawer-list {
         margin                        : 0 20px;
@@ -70,10 +84,13 @@
         line-height                   : 40px;
         text-decoration               : none;
         color                         : var(--app-secondary-color);
+        transition                    : all 0.3s cubic-bezier(.25,.8,.25,1);
       }
       .drawer-list a.iron-selected {
         color                         : var(--app-secondary-color);
+        padding-left                  : 20px;
         font-weight                   : bold;
+        background-color              : #eee;
       }
       .drawer-list a.subroute {
         padding-left                  : 32px;
@@ -89,9 +106,9 @@
       }
     </style>
 <!--  
-    ------------------------------------
+    ====================================
                    HTML
-    ------------------------------------
+    ====================================
 -->
     <app-location 
       route ="{{route}}">
@@ -119,16 +136,25 @@
             name = "control"
             href = "/control">
             Setup
+            <iron-icon 
+              icon = "settings">
+            </iron-icon>
           </a>
           <a 
             name = "teams"
             href = "/teams">
             Teams
+            <iron-icon 
+              icon = "face">
+            </iron-icon>
           </a>
           <a 
             name = "countdown"
             href = "/countdown">
             Countdown
+            <iron-icon 
+              icon = "alarm">
+            </iron-icon>
           </a>
         </iron-selector>
       </app-drawer>
@@ -170,9 +196,9 @@
     </app-drawer-layout>
   </template>
 <!--
-    ------------------------------------
+    ====================================
                     JS
-    ------------------------------------
+    ====================================
 -->
   <script>
     "use strict";

@@ -44,6 +44,7 @@
         margin            : 2em;
         border-radius     : 5px;
         background-color  : #fff;
+        max-height        : 70vh;
         color             : var(--app-secondary-color);
       }
       #countdown {
@@ -65,6 +66,14 @@
         #time {
           font-size         : 2em;
           top               : -222px;
+        }
+        .card {
+          max-height        : none;
+        }
+      }
+      @media all and (max-height: 700px) {
+        .card {
+          max-height        : none;
         }
       }
       @media all and (max-width: 380px) {
@@ -248,6 +257,7 @@
               if (percent >= 0){
                 countdown.innerHTML = '';
                 timeString          = mins +':' +secs;
+                if (secs <= 9) timeString = mins +':0' +secs;
                 time.innerHTML      = timeString;
                 countdown.appendChild(pieChart(percent , 400)); // Redraw updated chart
               }
@@ -279,11 +289,17 @@
                     case ((days()  > 1) && (hours() == 1) ):
                       message = days()+' days, '+hours()+' hour...';
                       break;
+                    case ((days()  > 1) && (hours() === 0) ):
+                      message = days()+' days...';
+                      break;
                     case ((days() == 1) && (hours()  > 1)):
                       message = days()+' day, '+hours()+' hours...';
                       break;
                     case ((days() == 1) && (hours() == 1)):
                       message = days()+' day, '+hours()+' hour...';
+                      break;
+                    case ((days() == 1) && (hours() === 0)):
+                      message = days()+' day...';
                       break;
                   }
                   title = 'Pitches will start in '+message;
@@ -309,9 +325,9 @@
                   title = 'Pitches will start in '+Math.floor((st - moment)/60000)+' minutes...';
                   break;
                 case (totalMins() == 1):
-                  title = 'Pitches will start in '+Math.floor((st - moment)/60000)+' minute...'; 
+                  title = 'Pitches will start in less than 2 minutes...'; 
                   break;
-                case (totalMins === 0):
+                case (totalMins() === 0):
                   title = 'Pitches will start in '+Math.floor((st - moment)/1000)+' seconds...';
                   break;
               }
