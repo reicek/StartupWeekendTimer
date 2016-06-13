@@ -1,3 +1,4 @@
+![App Screenshot](https://i.imgsafe.org/edab88880f.png)
 StartupWeekend Timer
 ====================
 ###### by César Antón Dorantes <a href="https://twitter.com/reicek">@reicek</a>
@@ -8,12 +9,26 @@ This is a progressive real time web app built using Polymer and Firebase meant t
 
 https://startupweekend-timer.firebaseapp.com
 
+![App Screenshot](https://i.imgsafe.org/ed96cb4a50.png)
+
 ### Setup
 
 ##### Prerequisites
 
+You need NodeJS and NPM installed.
+
+https://nodejs.org/en/download/
+
+Run the following commands from you console.
+
     npm install -g polymer-cli
     bower install
+
+##### New to progressive web apps?
+
+Here's a Google codelab that will familiarize you with all the technology on this project.
+
+https://codelabs.developers.google.com/codelabs/your-first-pwapp/
 
 ### Start the development server
 
